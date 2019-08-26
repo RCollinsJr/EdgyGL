@@ -31,14 +31,16 @@ extern "C" void Java_com_example_edgygl_activities_MainActivity_processImage(
         const jint lowThreshold) {
 
     /// ratio of Low canny threshold to High canny threshold
-    int thresholdinRatio = 3;
+    const int THRESHOLD_RATIO = 4;
 
     /// adjust for best combination of speed and performance
     const int SCALE_FACTOR = 4;
 
+    RNG rng(COLOR_RANGE);
+
     /// timing variables (not used at this time) (pun)
-    double startTime = (double) getTickCount();
-    double endTime = (double) getTickCount();
+    auto startTime = (double) getTickCount();
+    auto endTime = (double) getTickCount();
 
     /// create a mat the size of the preview and read pixels from GL texture into the mat
     static UMat inputMat;
@@ -59,13 +61,29 @@ extern "C" void Java_com_example_edgygl_activities_MainActivity_processImage(
 
     /// create new cv::Mat, canny it and convert
     Mat cannyMat(height, width, CV_8UC1);
-    Canny(blurred, cannyMat, lowThreshold, lowThreshold * thresholdinRatio, 3);
+    Canny(blurred, cannyMat, lowThreshold, lowThreshold * THRESHOLD_RATIO, 3);
 
-    /// convert grayscale back to BGRA so it can be added to the input mat
-    cvtColor(cannyMat, cannyMat, COLOR_GRAY2BGRA);
+    /// Find contours
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours(cannyMat, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+
+    /// Draw contours
+    Mat drawing = Mat::zeros( cannyMat.size(), CV_8UC4 );
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        // get a random color
+        Scalar color = Scalar(
+                rng.uniform(0, COLOR_RANGE_TOP),
+                rng.uniform(0, COLOR_RANGE_TOP),
+                rng.uniform(0, COLOR_RANGE_TOP) );
+
+        // draw the contour using the random color
+        drawContours(drawing, contours, i, color, 1, LINE_8, hierarchy, 0, Point());
+    }
 
     /// resize the image back to it's original dimensions
-    cv::resize(cannyMat, reSized, cv::Size(inputMat.cols, inputMat.rows), INTER_LINEAR);
+    cv::resize(drawing, reSized, cv::Size(inputMat.cols, inputMat.rows), INTER_LINEAR);
 
     /// add the two layers together into the collimation mat
     addWeighted(reSized, 1.00, inputMat, 1.00, 0.0, inputMat);

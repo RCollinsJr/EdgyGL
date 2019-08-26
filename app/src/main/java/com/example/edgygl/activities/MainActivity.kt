@@ -1,18 +1,18 @@
 package com.example.edgygl.activities
 
+import android.content.pm.ActivityInfo
 import android.graphics.Point
 import android.opengl.GLSurfaceView
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
-import android.util.Size
 import android.view.Gravity
-import android.view.SurfaceHolder
+import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.edgygl.R
 import com.example.edgygl.opengl.CameraRenderer
 import com.example.edgygl.opengl.EdgyGLSurfaceView
@@ -22,7 +22,6 @@ import kotlinx.coroutines.*
 import org.opencv.android.CameraGLSurfaceView
 import org.opencv.android.OpenCVLoader
 import timber.log.Timber
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(),
@@ -37,35 +36,14 @@ class MainActivity : AppCompatActivity(),
      * @param textureHeight An [Int] representing the GL texture's height
      * @param lowThreshold Canny Threshold low value
      */
-    external fun processImage(textureIN: Int,
+    private external fun processImage(textureIN: Int,
                                       textureOUT: Int,
                                       textureWidth: Int,
                                       textureHeight: Int,
                                       lowThreshold: Int)
 
-    /**
-     *
-     */
-    private val mSurfaceHolderCallback = object : SurfaceHolder.Callback {
-
-        override fun surfaceCreated(holder: SurfaceHolder?) {
-            mSurfaceHolder = holder
-        }
-
-        override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-            mSurfaceHolder = holder
-        }
-
-        override fun surfaceDestroyed(holder: SurfaceHolder?) {
-            mSurfaceHolder = null
-        }
-    }
-
-
     private var mTextureWidth: Int = -1
     private var mTextureHeight: Int = -1
-
-    private var mSurfaceHolder: SurfaceHolder? = null
 
     /** An additional thread for running tasks that shouldn't block the UI */
     private var mBackgroundThread: HandlerThread? = null
@@ -87,19 +65,6 @@ class MainActivity : AppCompatActivity(),
      * Flag for indicating the jni code is still processing a previous frame
      */
     private var mIsProcessing = false
-    var isProcessing: Boolean
-        get() = mIsProcessing
-        set(value) {
-            mIsProcessing = value
-        }
-
-    /** Compares two `Size`s based on their areas  */
-    internal class CompareSizesByArea : Comparator<Size> {
-        override fun compare(lhs: Size, rhs: Size): Int {
-            // We cast here to ensure the multiplications won't overflow
-            return java.lang.Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
-        }
-    }
 
     /** Run all co-routines  on Main  */
     private val job = SupervisorJob()
@@ -107,14 +72,11 @@ class MainActivity : AppCompatActivity(),
         get() = Dispatchers.Main + job
 
     override fun onCameraViewStarted(width: Int, height: Int) {
-        runOnUiThread { Toast.makeText(this, "onCameraViewStarted", Toast.LENGTH_SHORT).show() }
         frameCounter = 0
         lastNanoTime = System.nanoTime()
     }
 
-    override fun onCameraViewStopped() {
-        runOnUiThread { Toast.makeText(this, "onCameraViewStopped", Toast.LENGTH_SHORT).show() }
-    }
+    override fun onCameraViewStopped() {}
 
     override fun onCameraTexture(textureIn: Int, textureOut: Int, width: Int, height: Int): Boolean {
         // FPS
@@ -137,24 +99,42 @@ class MainActivity : AppCompatActivity(),
         return true
     }
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        setContentView(R.layout.activity_main)
 
         // using Timber for logging
         Timber.plant(Timber.DebugTree())
 
-        if (!OpenCVLoader.initDebug()) {
-            Timber.e("OpenCV not loaded")
-        } else {
-            Timber.i("OpenCV loaded")
+        // portrait mode only for simplicity - do this BEFORE setContentView()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        // set application theme and layout
+        setTheme(R.style.AppTheme)
+        setContentView(R.layout.activity_main)
+
+        // FULL screen mode to keep the aspect ratio of the GLSurfaceView correct
+        window.decorView.apply {
+            systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+        }
+
+        // initialize OpenCV library
+        this.launch(this.coroutineContext) {
+            if (!OpenCVLoader.initDebug()) {
+                Timber.e("OpenCV not loaded")
+            } else {
+                Timber.i("OpenCV loaded")
+            }
         }
 
         // load the jni library with the astronomy specific classes
-        this.launch(this.coroutineContext) { System.loadLibrary("processGLImage") }
+        this.launch(this.coroutineContext) {
+            System.loadLibrary("processGLImage")
+        }
 
         // create GL renderer passing in the app context so it can access the shader glsl files
         mGLRenderer = CameraRenderer(this)
@@ -244,6 +224,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     /**
+     * Calls doProcessing() if not already performing edge detection
      *
      * @param textIn
      * @param textOut
@@ -265,6 +246,7 @@ class MainActivity : AppCompatActivity(),
      * Calls the jni c++ processImage() function to perform the edge detection
      * This function does nothing if the jni code has not returned
      * from a previous call
+     *
      * @param texture_in
      * @param texture_out
      */
@@ -283,5 +265,4 @@ class MainActivity : AppCompatActivity(),
         // done processing
         mIsProcessing = false
     }
-
 }

@@ -3,26 +3,24 @@ package com.example.edgygl.opengl
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Point
+import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
-import androidx.core.content.ContextCompat
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.Surface
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.windowManager
 import timber.log.Timber
-import java.io.File
-import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import android.hardware.camera2.CameraMetadata
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
-import kotlinx.coroutines.*
-import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.abs
 
@@ -211,9 +209,9 @@ class CameraRenderer(private val context: Context) : GLRendererBase(context),
                 ?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
         // list of available preview sizes supported by the camera
-        mSupportedPreviewSizes = Arrays.asList(*streamConfigMap?.getOutputSizes(SurfaceTexture::class.java))
-        if (mSupportedPreviewSizes.isNotEmpty()) {
-            for (previewSize in mSupportedPreviewSizes) {
+        val outputSizes = streamConfigMap?.getOutputSizes(SurfaceTexture::class.java)
+        if (outputSizes != null) {
+            for (previewSize in outputSizes) {
                 val w = previewSize.width
                 val h = previewSize.height
 
@@ -238,9 +236,6 @@ class CameraRenderer(private val context: Context) : GLRendererBase(context),
     private var mImageReader: ImageReader? = null
 
     private var glPreviewSurface: Surface? = null
-
-    /** This is the output file for our picture */
-    private var mFile: File? = null
 
     /** [CaptureRequest.Builder] for the camera preview */
     private var mPreviewRequestBuilder: CaptureRequest.Builder? = null

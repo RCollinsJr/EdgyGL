@@ -163,13 +163,11 @@ abstract class GLRendererBase(private val ctx: Context)
         }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        Timber.d("onSurfaceCreated() called")
         // "compile" shader programs and init frame buffer objext
         initShaders()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        Timber.d("onSurfaceChanged() called with width: $width and height: $height")
         this.mSurfaceWidth = width
         this.mSurfaceHeight = height
         this.mSurfaceSize = (Size(this.mSurfaceWidth, this.mSurfaceHeight))
@@ -179,7 +177,6 @@ abstract class GLRendererBase(private val ctx: Context)
     }
 
     override fun onFrameAvailable(p0: SurfaceTexture?) {
-        Timber.d("onFrameAvailable() called...")
         mUpdateSurfaceTexture = true
         glSurfaceView?.requestRender()
     }
@@ -372,7 +369,7 @@ abstract class GLRendererBase(private val ctx: Context)
     }
 
     /**
-     * Stops the camera preview and deletes the [GLsurfaceView]'s [SurfaceTexture]
+     * Stops the camera preview and deletes the [GLSurfaceView]'s [SurfaceTexture]
      */
     protected open fun doStop() {
         synchronized(this) {

@@ -16,4 +16,7 @@ extern "C" void Java_com_example_edgygl_activities_MainActivity_processImage (
         const jint height,
         const jint lowThreshold);
 
+        const int COLOR_RANGE = 12345;
+        const int COLOR_RANGE_TOP = 255;
+
 #endif //IMAGEPROC_IMAGEPROCESSING_H

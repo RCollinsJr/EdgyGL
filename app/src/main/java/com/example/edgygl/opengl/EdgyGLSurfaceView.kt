@@ -9,8 +9,6 @@ import timber.log.Timber
 
 class EdgyGLSurfaceView(context: Context, attrs: AttributeSet) : GLSurfaceView(context, attrs) {
 
-    private external fun doImageProcessing(textureIN: Int, textureOUT: Int, w: Int, h: Int)
-
     var cameraTextureListener: CameraGLSurfaceView.CameraTextureListener? = null
     private var mRenderer: CameraRenderer? = null
 
