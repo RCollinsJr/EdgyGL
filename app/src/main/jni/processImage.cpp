@@ -64,7 +64,7 @@ extern "C" void Java_com_example_edgygl_activities_MainActivity_processImage(
     Canny(blurred, cannyMat, lowThreshold, lowThreshold * THRESHOLD_RATIO, 3);
 
     /// Find contours
-    vector<vector<Point> > contours;
+    vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     findContours(cannyMat, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
 
