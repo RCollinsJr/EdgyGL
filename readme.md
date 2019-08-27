@@ -13,8 +13,8 @@ An app to demonstrate how to use OpenGL and OpenCV together on an Android device
 ## Motivation
 
 While developing an application that assists in Astrophotograhy and Telescope setup, I needed to 
-find a more efficient mechanism for passing frame data taken using the device's camera to my OpenCV
-machine vision code that processed the camera frame data. This project is partially based on the 
+find a more efficient mechanism for passing frame data from the device's camera to my OpenCV
+machine vision code that processed the camera data. This project is partially based on the 
 OpenCV CameraGLRendererBase class, but does not use the OpenCV camera implementation. This project
 uses it's own implementation of the Android Camera2 api. A better version of this app can be realized
 by using an auto-sizing TextureView, but that is not going to be shown here.
