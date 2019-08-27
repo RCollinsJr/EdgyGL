@@ -79,21 +79,8 @@ class MainActivity : AppCompatActivity(),
     override fun onCameraViewStopped() {}
 
     override fun onCameraTexture(textureIn: Int, textureOut: Int, width: Int, height: Int): Boolean {
-        // FPS
-        frameCounter++
-        if (frameCounter >= 30) {
-            val fps = (frameCounter * 1e9 / (System.nanoTime() - lastNanoTime)).toInt()
-            Timber.i("drawFrame() FPS: $fps")
-            if (mFpsText != null) {
-                val fpsUpdater = Runnable { mFpsText?.text = "FPS: $fps" }
-                Handler(Looper.getMainLooper()).post(fpsUpdater)
-            } else {
-                Timber.d("mFpsText == null")
-            }
-            frameCounter = 0
-            lastNanoTime = System.nanoTime()
-        }
 
+        //
         doImageProcessing(textureIn, textureOut, width, height)
 
         return true

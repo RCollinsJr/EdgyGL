@@ -40,7 +40,7 @@ class GlUtil {
      * @return A handle to the program, or 0 on failure
      */
     fun createProgram(context: Context, vertexAssetFile: String, fragmentAssetFile: String): Int {
-
+        Timber.d("createProgram() called...")
         val vertexSource = getStringFromFileInAssets(context, "shaders/$vertexAssetFile")
         val vertexShader = compileShader(GLES30.GL_VERTEX_SHADER, vertexSource)
         if (vertexShader == 0) { return 0 }

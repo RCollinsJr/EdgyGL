@@ -116,7 +116,7 @@ private fun initShaders() {
 
 OpenCV Edge Detection:
 
-```c++
+```C++
 extern "C" void Java_com_example_edgygl_activities_MainActivity_processImage(
 
         JNIEnv *env,
