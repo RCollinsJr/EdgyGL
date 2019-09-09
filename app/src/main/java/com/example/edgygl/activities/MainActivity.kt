@@ -1,21 +1,26 @@
 package com.example.edgygl.activities
 
+import android.Manifest.permission.CAMERA
+import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.Point
+import android.net.Uri
 import android.opengl.GLSurfaceView
-import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
+import android.os.*
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.edgygl.R
+import com.example.edgygl.fragments.CameraPermissionsFragment
 import com.example.edgygl.opengl.CameraRenderer
 import com.example.edgygl.opengl.EdgyGLSurfaceView
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
@@ -26,6 +31,11 @@ import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(),
     CameraGLSurfaceView.CameraTextureListener, CoroutineScope {
+
+    // good place for constants...
+    companion object {
+        const val REQUEST_CAMERA_PERMISSIONS = 1
+    }
 
     /**
      * This is the JNI method to call when frame data is available
@@ -60,6 +70,15 @@ class MainActivity : AppCompatActivity(),
     private var lastNanoTime: Long = 0
 
     private var mFpsText: TextView? = null
+
+    private var mHasPermission = false
+
+    private var mCameraPermissionsFragment: CameraPermissionsFragment? = null
+    private val isRationaleCamFragmentShown: Boolean
+        get() = mCameraPermissionsFragment != null
+                && (mCameraPermissionsFragment?.isVisible
+            ?: false)
+
 
     /**
      * Flag for indicating the jni code is still processing a previous frame
@@ -151,23 +170,40 @@ class MainActivity : AppCompatActivity(),
         })
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            mHasPermission = if (checkSelfPermission(CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(CAMERA), REQUEST_CAMERA_PERMISSIONS)
+                false
+            } else {
+                true
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        startBackgroundThread()
-        mGLSurfaceView?.onResume()
+        Timber.d("onResume() called...")
 
         val displaySize = Point(0, 0)
         windowManager.defaultDisplay.getRealSize(displaySize)
+
+        startBackgroundThread()
+
+        mGLSurfaceView?.onResume()
         mGLRenderer?.setCameraPreviewSize(displaySize.x, displaySize.y)
     }
 
     override fun onPause() {
         super.onPause()
+        Timber.d("onPause() called...")
         mGLSurfaceView?.onPause()
         mGLRenderer?.doStop()
     }
 
     override fun onDestroy() {
+        Timber.d("onDestroy() called...")
         stopBackgroundThread()
         coroutineContext.cancelChildren()
         this.clearFindViewByIdCache()
@@ -252,4 +288,50 @@ class MainActivity : AppCompatActivity(),
         // done processing
         mIsProcessing = false
     }
+
+    /**
+     * Called when a user has selected 'Deny' or 'Allow' from a permissions dialog
+     *
+     * @param requestCode  Integer representing the 'Request Code'
+     * @param permissions  String array containing the requested permissions
+     * @param grantResults Integer array containing the permissions results
+     */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+
+        when (requestCode) {
+
+            REQUEST_CAMERA_PERMISSIONS -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    return
+                } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, CAMERA)) {
+
+                    if (mCameraPermissionsFragment == null) {
+                        mCameraPermissionsFragment = CameraPermissionsFragment.newInstance("", "")
+                    }
+
+                    if (!isRationaleCamFragmentShown) {
+                        mCameraPermissionsFragment?.show(supportFragmentManager, getString(R.string.permissions_title_camera))
+                    }
+
+                } else {
+                    val snackbar = Snackbar.make(main_frame_layout,
+                        resources.getString(R.string.message_no_camera_permissions), Snackbar.LENGTH_LONG)
+                    snackbar.setAction(resources.getString(R.string.settings)) {
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts("package", packageName, null)
+                        intent.data = uri
+                        startActivity(intent)
+                        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+                    }
+
+                    if (!snackbar.isShown) {
+                        snackbar.show()
+                    }
+                }
+            }
+        }
+    }
+
 }

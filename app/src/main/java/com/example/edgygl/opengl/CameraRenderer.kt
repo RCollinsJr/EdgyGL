@@ -505,7 +505,6 @@ class CameraRenderer(private val context: Context) : GLRendererBase(context),
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-                // requestCameraPermission()
             return
         }
 

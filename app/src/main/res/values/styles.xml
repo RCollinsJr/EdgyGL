@@ -15,6 +15,15 @@
         <item name="colorControlHighlight">@color/accent</item>
     </style>
 
+    <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/black</item>
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+
     <!-- Basic Card Style -->
     <style name="BasicCardViewStyle" parent="CardView">
         <item name="cardBackgroundColor">@color/translucent_white</item>

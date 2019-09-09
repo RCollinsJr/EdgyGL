@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">EdgyGL</string>
+
+    <string name="settings">Settings</string>
+
+    <string name="permissions_title_camera">Camera Permissions Request</string>
+    <string name="camera_rationale_string">\tWithout camera permissions, this app cannot open your device\'s camera.
+    Without the camera there is nothing to do.</string>
+    <string name="message_no_camera_permissions">Enable camera permissions here!</string>
+
 </resources>
