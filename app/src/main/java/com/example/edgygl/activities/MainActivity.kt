@@ -12,7 +12,6 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.widget.SeekBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,6 +26,8 @@ import kotlinx.coroutines.*
 import org.opencv.android.CameraGLSurfaceView
 import org.opencv.android.OpenCVLoader
 import timber.log.Timber
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(),
@@ -66,11 +67,6 @@ class MainActivity : AppCompatActivity(),
 
     private var mThresholdValue: Int = 0
 
-    private var frameCounter: Int = 0
-    private var lastNanoTime: Long = 0
-
-    private var mFpsText: TextView? = null
-
     private var mHasPermission = false
 
     private var mCameraPermissionsFragment: CameraPermissionsFragment? = null
@@ -79,27 +75,30 @@ class MainActivity : AppCompatActivity(),
                 && (mCameraPermissionsFragment?.isVisible
             ?: false)
 
-
     /**
      * Flag for indicating the jni code is still processing a previous frame
      */
     private var mIsProcessing = false
+
+    private var startTime: Long = 0
+    private var endTime: Long = 0
+    private var mElapedTimerList: MutableList<Long> = mutableListOf()
 
     /** Run all co-routines  on Main  */
     private val job = SupervisorJob()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
-    override fun onCameraViewStarted(width: Int, height: Int) {
-        frameCounter = 0
-        lastNanoTime = System.nanoTime()
-    }
+    override fun onCameraViewStarted(width: Int, height: Int) {}
 
     override fun onCameraViewStopped() {}
 
     override fun onCameraTexture(textureIn: Int, textureOut: Int, width: Int, height: Int): Boolean {
 
-        //
+        // use for determining performance
+        startTime = System.nanoTime()
+
+        // do the canny edge detect and contour following
         doImageProcessing(textureIn, textureOut, width, height)
 
         return true
@@ -159,6 +158,7 @@ class MainActivity : AppCompatActivity(),
         cannyThresholdSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 mThresholdValue = progress
+                mElapedTimerList.clear()
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -263,6 +263,26 @@ class MainActivity : AppCompatActivity(),
         if (!mIsProcessing) {
             doProcessing(textIn, textOut)
         }
+
+        val formatter = DecimalFormat("###")
+        formatter.roundingMode = RoundingMode.CEILING
+
+        val totalTime = endTime - startTime
+        if (totalTime > 0) {
+            mElapedTimerList.add(totalTime)
+        }
+
+        // only keep 100 readings
+        if (mElapedTimerList.size > 100) {
+            mElapedTimerList.removeAt(0)
+        }
+
+        // use average of times and convert from nano seconds to fps
+        val formattedTime =
+            formatter.format(1 / (mElapedTimerList.average() * 1e-9)) +
+                    " " +
+                    getString(R.string.fps)
+        this@MainActivity.runOnUiThread { fps_textview.text = formattedTime }
     }
 
     /**
@@ -287,6 +307,9 @@ class MainActivity : AppCompatActivity(),
 
         // done processing
         mIsProcessing = false
+
+        // use for performance measurement
+        endTime = System.nanoTime()
     }
 
     /**
@@ -315,7 +338,7 @@ class MainActivity : AppCompatActivity(),
                     }
 
                 } else {
-                    val snackbar = Snackbar.make(main_frame_layout,
+                    val snackbar = Snackbar.make(main_constraint_layout,
                         resources.getString(R.string.message_no_camera_permissions), Snackbar.LENGTH_LONG)
                     snackbar.setAction(resources.getString(R.string.settings)) {
                         val intent = Intent()

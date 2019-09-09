@@ -7,19 +7,6 @@
         android:layout_height="match_parent"
         tools:context=".activities.MainActivity">
 
-    <FrameLayout
-            android:id="@+id/main_frame_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-
-    <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".80" />
-
     <com.example.edgygl.opengl.EdgyGLSurfaceView
             android:id="@+id/gl_surface_view"
             android:layout_width="match_parent"
@@ -29,13 +16,38 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".85" />
+
     <androidx.cardview.widget.CardView
+            android:id="@+id/fps_cardview"
+            style="@style/BasicCardViewStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/guideline">
+
+        <TextView
+                android:id="@+id/fps_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:text="FPS" />
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+            android:id="@+id/threshold_slider_cardview"
             style="@style/BasicCardViewStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="26dp"
             android:layout_marginEnd="26dp"
-            app:cardBackgroundColor="@color/translucent_black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -45,16 +57,11 @@
                 android:id="@+id/cannyThresholdSeekBar"
                 style="@style/Widget.AppCompat.SeekBar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_height="36dp"
                 android:max="100"
                 android:progress="50"
                 android:thumb="@drawable/thumb"
-                android:thumbTintMode="multiply"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/guideline" />
+                android:thumbTintMode="multiply" />
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

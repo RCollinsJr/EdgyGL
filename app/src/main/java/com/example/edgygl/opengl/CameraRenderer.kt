@@ -194,7 +194,6 @@ class CameraRenderer(private val context: Context) : GLRendererBase(context),
         }
     }
 
-
     /**
      * Get a list of supported camera preview resolutions that match a given aspect ratio
      * @param aspectRatio The intrinsic device aspect ratio
@@ -269,8 +268,6 @@ class CameraRenderer(private val context: Context) : GLRendererBase(context),
             if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
                 return null
             }
-
-            val map = mCameraCharacteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
             // see if we need to swap dimension to get the preview size relative to sensor coordinate
             val displayRotation = context.windowManager.defaultDisplay.rotation

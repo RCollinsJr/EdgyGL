@@ -8,6 +8,7 @@ An app to demonstrate how to use OpenGL and OpenCV together on an Android device
   <img src="screenshots/Threshold_6.png" width="200" /> 
   <img src="screenshots/Threshold_55.png" width="200" />
   <img src="screenshots/Threshold_88.png" width="200" />
+  <img src="screenshots/fps.png" width="200" />
 </p>
 
 ## Motivation
